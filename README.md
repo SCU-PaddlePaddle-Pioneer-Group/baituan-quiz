@@ -4,9 +4,9 @@
 
 ## 在线访问与部署
 
-参与者使用现代浏览器联网访问：[打开答题网页](https://yugongl53-collab.github.io/baituan-quiz/)。
+参与者使用现代浏览器联网访问：[打开答题网页](https://scu-paddlepaddle-pioneer-group.github.io/baituan-quiz/)。
 
-维护者需要具有 [GitHub 仓库](https://github.com/yugongl53-collab/baituan-quiz) 的管理权限。网站是纯静态页面，无需安装依赖或执行构建命令。
+维护者需要具有 [GitHub 仓库](https://github.com/SCU-PaddlePaddle-Pioneer-Group/baituan-quiz) 的管理权限。网站是纯静态页面，无需安装依赖或执行构建命令。
 
 1. 在仓库的 `Settings → Pages` 中将 `Source` 设置为 `Deploy from a branch`。
 2. 选择 `main` 分支、`/ (root)` 目录并保存。
