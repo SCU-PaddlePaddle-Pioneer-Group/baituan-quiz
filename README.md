@@ -1,6 +1,20 @@
 # 飞桨领航百团大战趣味答题
 
-供百团大战现场参与者使用的本地单选答题网页，共 20 题，每题 5 分。
+供百团大战现场参与者使用的单选答题网页，共 20 题，每题 5 分。支持在线访问和本地打开，适用于活动现场的电脑和手机浏览器。
+
+## 在线访问与部署
+
+参与者使用现代浏览器联网访问：[打开答题网页](https://yugongl53-collab.github.io/baituan-quiz/)。
+
+维护者需要具有 [GitHub 仓库](https://github.com/yugongl53-collab/baituan-quiz) 的管理权限。网站是纯静态页面，无需安装依赖或执行构建命令。
+
+1. 在仓库的 `Settings → Pages` 中将 `Source` 设置为 `Deploy from a branch`。
+2. 选择 `main` 分支、`/ (root)` 目录并保存。
+3. 在仓库 `Actions` 中确认 `pages build and deployment` 工作流成功，再打开上述网址。
+
+后续合并到 `main` 的修改会自动发布。`index.html` 与 `dist/` 必须一同保留；如访问返回 404，先检查 Pages 的分支和目录设置，再查看部署工作流日志。页面打开后应显示“开始答题”，浏览器网络面板中的 `dist/style.css`、`dist/questions.js`、`dist/quiz.js`、`dist/app.js` 应加载成功。
+
+代码与题库随公开仓库发布。在线版本沿用下文的内存计分规则，不上传参与者的答案或成绩。
 
 ## 打开网页
 
