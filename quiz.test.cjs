@@ -1,4 +1,4 @@
-/* 飞桨领航百团大战答题网页：验证计分状态与页面全流程不展示答案的约束。 */
+/* 飞桨领航百团大战答题网页：验证当前题改选、计分状态与页面全流程不展示答案的约束。 */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -15,7 +15,7 @@ test('20 道题的选项、答案与解析完整', () => {
     assert.ok(Number.isInteger(question.answer) && question.answer >= 0 && question.answer < 4);
   }
 });
-test('未提交不能跳题，重复选择不改答案或计分', () => {
+test('未选择不能跳题，当前题可改选且不重复计分', () => {
   const quiz = new Quiz(questions);
   assert.equal(quiz.choose(0), false);
   quiz.start();
@@ -23,9 +23,16 @@ test('未提交不能跳题，重复选择不改答案或计分', () => {
   assert.equal(quiz.choose(-1), false);
   assert.equal(quiz.choose(4), false);
   assert.equal(quiz.choose(questions[0].answer), true);
-  assert.equal(quiz.choose((questions[0].answer + 1) % 4), false);
+  assert.equal(quiz.choose(questions[0].answer), false);
   assert.equal(quiz.correct, 1);
+  assert.equal(quiz.choose((questions[0].answer + 1) % 4), true);
+  assert.equal(quiz.correct, 0);
+  assert.equal(quiz.choose(questions[0].answer), true);
+  assert.equal(quiz.correct, 1);
+  assert.equal(quiz.answers.length, 1);
   assert.equal(quiz.next(), true);
+  quiz.choose((questions[1].answer + 1) % 4);
+  assert.equal(quiz.answers[0], questions[0].answer);
   assert.equal(quiz.complete, false);
 });
 test('完成 20 题立即保留成绩；下一人未完成不覆盖上一人成绩', () => {
@@ -37,6 +44,11 @@ test('完成 20 题立即保留成绩；下一人未完成不覆盖上一人成�
   });
   assert.equal(quiz.complete, true);
   assert.deepEqual(quiz.lastResult, { correct: 13, total: 20, score: 65 });
+  // 最后一题改选后，已保留的总成绩必须按最新选择更新。
+  quiz.choose(questions[19].answer);
+  assert.equal(quiz.lastResult.score, 70);
+  quiz.choose((questions[19].answer + 1) % 4);
+  assert.equal(quiz.lastResult.score, 65);
   quiz.start();
   assert.equal(quiz.index, 0);
   assert.deepEqual(quiz.answers, []);
@@ -102,12 +114,16 @@ test('正确和错误选择、恢复答题、全部题目及成绩页面均不�
     assertNoAnswer(page);
     const options = descendants(page.app).filter(node => node.className === 'option');
     const choice = (questions[index].answer + index % 2) % 4;
-    options[choice].click();
+    options[(choice + 1) % 4].click();
+    assertNoAnswer(page);
+    const currentOptions = descendants(page.app).filter(node => node.tag === 'button' && /\boption\b/.test(node.className));
+    assert.ok(currentOptions.every(node => !node.disabled));
+    currentOptions[choice].click();
     assertNoAnswer(page);
     const selected = descendants(page.app).filter(node => node.className.includes('selected'));
     assert.equal(selected.length, 1);
     assert.match(selected[0].attributes['aria-label'], /你的选择/);
-    assert.ok(descendants(page.app).filter(node => /\boption\b/.test(node.className) && node.tag === 'button').every(node => node.disabled));
+    assert.ok(selected[0].attributes['aria-label'].startsWith('ABCD'[choice]));
     page.run('home()');
     assertNoAnswer(page);
     page.run('enterQuiz()');
