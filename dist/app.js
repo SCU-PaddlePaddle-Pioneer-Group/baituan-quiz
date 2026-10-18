@@ -1,3 +1,4 @@
+/* 飞桨领航百团大战答题网页：渲染题目、选择状态与总成绩，全程不展示正确答案或解析。 */
 const quiz = new Quiz(QUESTIONS);
 const app = document.getElementById('app');
 const letters = 'ABCD';
@@ -60,25 +61,14 @@ function showQuestion() {
     });
     option.append(element('span', 'letter', letters[index]), element('span', 'option-text', text));
     option.disabled = answered;
-    if (answered && index === question.answer) {
-      option.classList.add('correct');
-      option.append(element('span', 'mark', '✓'));
-      option.setAttribute('aria-label', `${letters[index]}. ${text}，正确答案`);
-    } else if (answered && index === selected) {
-      option.classList.add('wrong');
-      option.append(element('span', 'mark', '✕'));
-      option.setAttribute('aria-label', `${letters[index]}. ${text}，你的选择，回答错误`);
+    // 只标记参与者的选择，不通过颜色、符号或无障碍标签透露对错。
+    if (answered && index === selected) {
+      option.classList.add('selected');
+      option.setAttribute('aria-label', `${letters[index]}. ${text}，你的选择`);
     }
     options.append(option);
   });
   app.append(options);
-  if (answered) {
-    const right = selected === question.answer;
-    const feedback = element('section', 'feedback');
-    feedback.append(element('strong', right ? 'good' : 'bad', right ? '✓ 回答正确' : '回答错误'));
-    feedback.append(element('p', '', `正确答案：${letters[question.answer]}. ${question.options[question.answer]}`), element('p', '', question.explanation));
-    app.append(feedback);
-  }
   const bottom = element('div', 'bottom');
   const last = quiz.index === QUESTIONS.length - 1;
   const next = button(last ? '查看总成绩' : '下一题 →', 'primary', () => {
