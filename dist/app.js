@@ -1,4 +1,4 @@
-/* 飞桨领航百团大战答题网页：渲染题目、选择状态与总成绩，全程不展示正确答案或解析。 */
+/* 飞桨领航百团大战答题网页：支持当前题切换选项，渲染选择状态与总成绩，全程不展示正确答案或解析。 */
 const quiz = new Quiz(QUESTIONS);
 const app = document.getElementById('app');
 const letters = 'ABCD';
@@ -60,7 +60,6 @@ function showQuestion() {
       }
     });
     option.append(element('span', 'letter', letters[index]), element('span', 'option-text', text));
-    option.disabled = answered;
     // 只标记参与者的选择，不通过颜色、符号或无障碍标签透露对错。
     if (answered && index === selected) {
       option.classList.add('selected');

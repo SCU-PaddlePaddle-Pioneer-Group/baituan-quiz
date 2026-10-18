@@ -1,4 +1,4 @@
-/* 成绩仅存在当前页面的内存中，完成最后一题时立即保留。 */
+/* 飞桨领航百团大战答题网页：管理当前题改选与内存计分，最后一题改选时同步更新总成绩。 */
 class Quiz {
   constructor(questions) {
     this.questions = questions;
@@ -17,7 +17,8 @@ class Quiz {
     return this.answers.filter((answer, index) => answer === this.questions[index].answer).length;
   }
   choose(choice) {
-    if (!this.started || this.answers[this.index] !== undefined || !Number.isInteger(choice) || choice < 0 || choice > 3) return false;
+    // 当前题可覆盖选择；总分从每题最新选择计算，避免改选累计计分。
+    if (!this.started || this.answers[this.index] === choice || !Number.isInteger(choice) || choice < 0 || choice > 3) return false;
     this.answers[this.index] = choice;
     if (this.complete) this.lastResult = { correct: this.correct, total: this.questions.length, score: this.correct * 5 };
     return true;
