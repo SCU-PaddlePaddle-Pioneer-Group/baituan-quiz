@@ -1,3 +1,4 @@
+/* 飞桨领航百团大战答题网页：提供响应式布局，以统一的蓝色样式标记已选项，不提示对错。 */
 :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; color: #172b39; background: #f5f7f8; font-synthesis: none; }
 * { box-sizing: border-box; }
 body { margin: 0; }
@@ -25,17 +26,10 @@ h2 { font-size: clamp(20px, 4vw, 24px); line-height: 1.65; font-weight: 600; mar
 .option:not(:disabled):hover { border-color: #176d91; background: #f0f7fa; }
 .letter { font-size: 14px; color: #718695; flex-shrink: 0; }
 .option-text { flex: 1; }
-.correct { border: 2px solid #27844e; background: #edf8f0; color: #216a40; padding: 16px 17px; }
-.wrong { border: 2px solid #c74949; background: #fff1f1; color: #a63737; padding: 16px 17px; }
-.mark { font-size: 24px; font-weight: 700; flex-shrink: 0; line-height: 1; }
-.feedback { margin-top: 24px; background: white; border: 1px solid #e1e8ec; border-radius: 12px; padding: 20px; }
-.feedback strong { display: block; font-size: 16px; margin-bottom: 12px; }
-.feedback p { line-height: 1.85; font-size: 15px; margin: 8px 0 0; color: #4a606e; }
-.good { color: #27844e; }
-.bad { color: #b53d3d; }
+.selected { border: 2px solid #176d91; background: #f0f7fa; color: #243d4d; padding: 16px 17px; }
 .bottom { margin-top: 24px; display: flex; justify-content: flex-end; }
 .score { font-size: 88px; line-height: 1; letter-spacing: -4px; color: #176d91; margin: 36px 0 16px; }
 .score span { font-size: 20px; letter-spacing: 0; margin-left: 8px; color: #718695; }
 .result-actions { display: flex; justify-content: center; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
-@media (max-width: 480px) { #app { padding-top: 24px; } .cover, .result { padding-top: 12vh; } .option { padding: 15px; } .correct, .wrong { padding: 14px; } }
+@media (max-width: 480px) { #app { padding-top: 24px; } .cover, .result { padding-top: 12vh; } .option { padding: 15px; } .selected { padding: 14px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
