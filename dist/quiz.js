@@ -13,6 +13,7 @@ class Quiz {
     this.started = true;
   }
   get complete() { return this.answers.length === this.questions.length; }
+  get pointsPerQuestion() { return 100 / this.questions.length; }
   get correct() {
     return this.answers.filter((answer, index) => answer === this.questions[index].answer).length;
   }
@@ -20,7 +21,7 @@ class Quiz {
     // 当前题可覆盖选择；总分从每题最新选择计算，避免改选累计计分。
     if (!this.started || this.answers[this.index] === choice || !Number.isInteger(choice) || choice < 0 || choice > 3) return false;
     this.answers[this.index] = choice;
-    if (this.complete) this.lastResult = { correct: this.correct, total: this.questions.length, score: this.correct * 5 };
+    if (this.complete) this.lastResult = { correct: this.correct, total: this.questions.length, score: this.correct * this.pointsPerQuestion };
     return true;
   }
   next() {

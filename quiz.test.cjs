@@ -7,8 +7,11 @@ const questions = require('./dist/questions.js');
 const Quiz = require('./dist/quiz.js');
 
 // 覆盖现场连续答题的状态边界，而非仅检查界面文案。
-test('20 道题的选项、答案与解析完整', () => {
-  assert.equal(questions.length, 20);
+test('10 道精选题完整，仅包含 AI 趣味与应用、飞桨及社团认知', () => {
+  assert.equal(questions.length, 10);
+  assert.equal(questions.filter(question => question.category.startsWith('AI')).length, 8);
+  assert.deepEqual(questions.slice(8).map(question => question.category), ['认识飞桨', '认识我们']);
+  assert.doesNotMatch(questions.map(question => question.prompt).join(' '), /HTTPS|DNS|photo\.|浮点数|验证码|硬币|水果盒/);
   for (const question of questions) {
     assert.equal(question.options.length, 4);
     assert.ok(question.prompt && question.explanation);
@@ -35,25 +38,25 @@ test('未选择不能跳题，当前题可改选且不重复计分', () => {
   assert.equal(quiz.answers[0], questions[0].answer);
   assert.equal(quiz.complete, false);
 });
-test('完成 20 题立即保留成绩；下一人未完成不覆盖上一人成绩', () => {
+test('完成 10 题按每题 10 分保留成绩；下一人未完成不覆盖上一人成绩', () => {
   const quiz = new Quiz(questions);
   quiz.start();
   questions.forEach((question, index) => {
-    quiz.choose(index < 13 ? question.answer : (question.answer + 1) % 4);
+    quiz.choose(index < 6 ? question.answer : (question.answer + 1) % 4);
     quiz.next();
   });
   assert.equal(quiz.complete, true);
-  assert.deepEqual(quiz.lastResult, { correct: 13, total: 20, score: 65 });
+  assert.deepEqual(quiz.lastResult, { correct: 6, total: 10, score: 60 });
   // 最后一题改选后，已保留的总成绩必须按最新选择更新。
-  quiz.choose(questions[19].answer);
+  quiz.choose(questions[9].answer);
   assert.equal(quiz.lastResult.score, 70);
-  quiz.choose((questions[19].answer + 1) % 4);
-  assert.equal(quiz.lastResult.score, 65);
+  quiz.choose((questions[9].answer + 1) % 4);
+  assert.equal(quiz.lastResult.score, 60);
   quiz.start();
   assert.equal(quiz.index, 0);
   assert.deepEqual(quiz.answers, []);
   quiz.choose(questions[0].answer);
-  assert.equal(quiz.lastResult.score, 65);
+  assert.equal(quiz.lastResult.score, 60);
   assert.equal(quiz.answers[0], questions[0].answer);
   quiz.next();
   questions.slice(1).forEach(question => { quiz.choose(question.answer); quiz.next(); });
@@ -64,9 +67,10 @@ test('完成 20 题立即保留成绩；下一人未完成不覆盖上一人成�
 // 用最小 DOM 执行实际页面脚本，检查可见内容与无障碍标签。
 function createPage() {
   const nodes = [];
+  const listeners = {};
   function node(tag) {
     const item = {
-      tag, children: [], attributes: {}, style: {}, className: '', textContent: '',
+      tag, tagName: tag.toUpperCase(), children: [], attributes: {}, style: {}, className: '', textContent: '',
       append(...children) { this.children.push(...children); },
       replaceChildren(...children) { this.children = children; },
       setAttribute(key, value) { this.attributes[key] = value; },
@@ -86,7 +90,7 @@ function createPage() {
       createTextNode: text => ({ textContent: text, children: [], attributes: {} }),
       getElementById: id => id === 'app' ? app : nodes.findLast(item => item.id === id)
     },
-    window: { scrollTo() {}, addEventListener() {} },
+    window: { scrollTo() {}, addEventListener(name, action) { listeners[name] = action; } },
     history: {
       pushState(state, title, hash) { location.hash = hash; },
       replaceState() {},
@@ -94,7 +98,7 @@ function createPage() {
     }
   });
   vm.runInContext(fs.readFileSync(`${__dirname}/dist/app.js`, 'utf8'), context);
-  return { app, run: code => vm.runInContext(code, context) };
+  return { app, run: code => vm.runInContext(code, context), dispatch: (name, event) => listeners[name](event) };
 }
 function descendants(root) {
   return [root, ...root.children.flatMap(descendants)];
@@ -137,4 +141,42 @@ test('正确和错误选择、恢复答题、全部题目及成绩页面均不�
   page.run('start()');
   assertNoAnswer(page);
   assert.equal(descendants(page.app).filter(node => node.className.includes('selected')).length, 0);
+});
+
+test('全错得 0 分，全对得 100 分，结束后不能跳到第 11 题', () => {
+  for (const correct of [false, true]) {
+    const quiz = new Quiz(questions);
+    quiz.start();
+    assert.equal(quiz.pointsPerQuestion, 10);
+    questions.forEach(question => {
+      quiz.choose(correct ? question.answer : (question.answer + 1) % 4);
+      quiz.next();
+    });
+    assert.equal(quiz.lastResult.score, correct ? 100 : 0);
+    assert.equal(quiz.index, 9);
+    assert.equal(quiz.next(), false);
+  }
+});
+
+test('键盘快捷键支持选择、改选和前进，且不会跳过未答题或影响首页', () => {
+  const page = createPage();
+  const key = (value, extra = {}) => page.dispatch('keydown', { key: value, preventDefault() {}, ...extra });
+  key('1');
+  assert.equal(page.run('quiz.started'), false);
+  page.run('start()');
+  key('Enter');
+  assert.equal(page.run('quiz.index'), 0);
+  key('1', { repeat: true });
+  key('2', { ctrlKey: true });
+  assert.equal(page.run('quiz.answers.length'), 0);
+  key('1');
+  assert.equal(page.run('quiz.answers[0]'), 0);
+  key('2');
+  const selected = descendants(page.app).find(node => node.id === 'option-1');
+  key('Enter', { target: selected });
+  assert.equal(page.run('quiz.index'), 1);
+  assert.equal(page.run('quiz.answers[0]'), 1);
+  const progress = descendants(page.app).find(node => node.attributes.role === 'progressbar');
+  assert.equal(progress.attributes['aria-valuenow'], '1');
+  assertNoAnswer(page);
 });
